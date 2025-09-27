@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Digi-Track</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.0.0/dist/jsQR.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; display:flex; min-height:100vh; }
+        .sidebar { width:250px; background:#1f2937; color:#d1d5db; padding:2rem 1rem; display:flex; flex-direction:column; }
+        .sidebar a { display:flex; align-items:center; padding:.75rem 1rem; margin-bottom:.5rem; border-radius:.5rem; transition:background-color .2s, color .2s; }
+        .sidebar a:hover, .sidebar a.active { background:#374151; color:#fff; }
+        .main-content { flex-grow:1; padding:2rem; background:#f3f4f6; overflow-y:auto; }
+        #qr-scanner { width:100%; height:300px; object-fit:contain; border:2px dashed #d1d5db; border-radius:.5rem; }
+        #inspection-photo { max-width:100%; border-radius:.5rem; margin-top:1rem; display:none; }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="sidebar">
+        <div class="text-xl font-bold text-gray-100 mb-8">Digi-Track</div>
+        <nav class="space-y-2">
+            <a href="#" id="loginLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 active">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h14a1 1 0 001-1V4a1 1 0 00-1-1H3zm0 2h14v10H3V5zm2 2h4a1 1 0 010 2H5a1 1 0 010-2zm0 4h4a1 1 0 010 2H5a1 1 0 010-2z" clip-rule="evenodd" /></svg>
+                <span data-lang-key="sidebar.login">Login</span>
+            </a>
+            <a href="#" id="inspectorDashboardLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                <span data-lang-key="sidebar.inspector_dashboard">Inspector Dashboard</span>
+            </a>
+            <a href="#" id="manufacturerDashboardLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3.379 3.379a2 2 0 01-2.828 0 2 2 0 010-2.828l3.379-3.379zm-7.778 1.414a2 2 0 11-2.828 2.828l9.586 9.586a1 1 0 01-1.414 1.414l-9.586-9.586a4 4 0 105.656 5.656l3.414-3.414a1 1 0 00-1.414-1.414L7.586 11.586a2 2 0 102.828 2.828l3.414-3.414a1 1 0 00-1.414-1.414L10.586 11.586a2 2 0 11-2.828-2.828L11.586 4.586a2 2 0 112.828 2.828L5.828 17.172a1 1 0 01-1.414-1.414L11.586 5.828z" clip-rule="evenodd" /></svg>
+                <span data-lang-key="sidebar.manufacturer_dashboard">Manufacturer Dashboard</span>
+            </a>
+            <a href="#" id="manufacturedItemsLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5 8a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1V9a1 1 0 00-1-1H5zm6-1a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1V8a1 1 0 00-1-1h-2z" clip-rule="evenodd" /></svg>
+                <span data-lang-key="sidebar.manufactured_items">Manufactured Items</span>
+            </a>
+            <a href="#" id="analyticsLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 11a1 1 0 011-1h14a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5z" /><path fill-rule="evenodd" d="M16 1a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V1zm-4 4a1 1 0 100-2 1 1 0 000 2zM8 3a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" /></svg>
+                <span data-lang-key="sidebar.analytics">Analytics</span>
+            </a>
+            <a href="#" id="inventoryLink" class="flex items-center space-x-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-md py-2 px-3 hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm5 4a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1zm0 7a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1zm3 0a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1z" /></svg>
+                <span data-lang-key="sidebar.inventory">Inventory</span>
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header id="mainHeader" class="flex justify-between items-center pb-8 border-b border-gray-300">
+            <div>
+                <h1 id="pageTitle" class="text-2xl font-semibold text-gray-900">Login</h1>
+                <span id="pageSubtitle" class="text-gray-500">Railway fittings manager</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <label for="language-select" class="text-gray-600 text-sm" data-lang-key="language.label">Language:</label>
+                <select id="language-select" class="px-2 py-1 border border-gray-300 rounded-md text-gray-700">
+                    <option value="en">English</option>
+                    <option value="hi">हिंदी</option>
+                </select>
+            </div>
+        </header>
+        <div id="contentPlaceholder" class="mt-8"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const contentPlaceholder = document.getElementById('contentPlaceholder');
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            const navLinks = document.querySelectorAll('.sidebar a');
+            const languageSelect = document.getElementById('language-select');
+            let currentStream = null;
+            let myCharts = {};
+
+            const userRoles = {
+                inspector: { username: 'inspector', password: 'inspass', dashboard: 'inspectorDashboard' },
+                admin: { username: 'admin', password: 'admpass', dashboard: 'analytics' },
+                manufacturer: { username: 'manufacturer', password: 'manpass', dashboard: 'manufacturerDashboard' }
+            };
+
+            const translatePageTitle = (pageName) => {
+                switch (pageName) {
+                    case 'login': return 'login.title';
+                    case 'inspectorDashboard': return 'inspector_dashboard.title';
+                    case 'manufacturerDashboard': return 'manufacturer_dashboard.title';
+                    case 'manufacturedItems': return 'manufactured_items.title';
+                    case 'analytics': return 'analytics.title';
+                    case 'inventory': return 'inventory.title';
+                    default: return 'login.title';
+                }
+            };
+
+            const showNavLinks = (role) => {
+                const navLinksToShow = {
+                    inspector: ['inspectorDashboard', 'manufacturerDashboard'],
+                    admin: ['analytics', 'inventory'],
+                    manufacturer: ['manufacturerDashboard', 'manufacturedItems']
+                };
+                navLinks.forEach(link => link.classList.add('hidden'));
+                document.getElementById('loginLink').classList.remove('hidden');
+
+                if (role && navLinksToShow[role]) {
+                    navLinksToShow[role].forEach(linkId => {
+                        document.getElementById(linkId + 'Link').classList.remove('hidden');
+                    });
+                }
+            };
+
+            const translations = {
+                en: {
+                    sidebar: {
+                        login: 'Login',
+                        inspector_dashboard: 'Inspector Dashboard',
+                        manufacturer_dashboard: 'Manufacturer Dashboard',
+                        manufactured_items: 'Manufactured Items',
+                        analytics: 'Analytics',
+                        inventory: 'Inventory'
+                    },
+                    header: {
+                        subtitle: 'Railway fittings manager'
+                    },
+                    login: {
+                        title: 'Login',
+                        username_label: 'Username',
+                        password_label: 'Password',
+                        login_btn: 'Sign In',
+                        login_error: 'Invalid username or password. Please try again.'
+                    },
+                    inspector_dashboard: {
+                        title: 'Inspector Dashboard',
+                        description: 'Scan a QR code to view item details and record an inspection.',
+                        start_scan_btn: 'Start QR Scanner',
+                        stop_scan_btn: 'Stop QR Scanner',
+                        scan_status: 'Scanning for QR Code...',
+                        scan_success: 'QR Code successfully scanned!',
+                        item_details_title: 'Item Details',
+                        item_details_placeholder: 'Scan an item to see its details here.',
+                        record_inspection_title: 'Record New Inspection',
+                        inspection_date_label: 'Inspection Date',
+                        capture_photo_btn: 'Capture Photo with Timestamp',
+                        download_pdf_btn: 'Download Inspection Report (PDF)',
+                        photo_captured: 'Photo captured successfully!',
+                        pdf_generated: 'PDF generated successfully!'
+                    },
+                    manufacturer_dashboard: {
+                        title: 'Manufacturer Dashboard',
+                        item_id_label: 'Item ID',
+                        manufacturing_name_label: 'Manufacturing Name',
+                        vendor_lot_number_label: 'Vendor Lot Number',
+                        date_of_supply_label: 'Date of Supply',
+                        warranty_period_label: 'Warranty Period',
+                        location_label: 'Location',
+                        timestamp_label: 'Timestamp',
+                        generate_btn: 'Generate QR Code',
+                        download_btn: 'Download QR Code',
+                        reset_btn: 'Reset Form'
+                    },
+                    manufactured_items: {
+                        title: 'Manufactured Items',
+                        description: 'Manage and track manufactured items.',
+                        table_id_header: 'Item ID',
+                        table_manuf_header: 'Manufacturing Name',
+                        table_date_manuf_header: 'Date of Manufacture',
+                        table_date_supply_header: 'Date of Supply',
+                        table_warranty_header: 'Warranty Period',
+                    },
+                    analytics: {
+                        title: 'Analytics Dashboard',
+                        quality_score: 'Overall Quality Score',
+                        quality_score_status: 'Good',
+                        defect_rate: 'Average Defect Rate',
+                        defect_rate_status: 'Monitor',
+                        warranty_items: 'Items Under Warranty',
+                        warranty_items_status: 'Excellent',
+                        inspection_pass_rate: 'Inspection Pass Rate',
+                        inspection_pass_rate_status: 'High',
+                        vendor_defect_chart_title: 'Vendor-wise Defect Rate',
+                        warranty_chart_title: 'Warranty Expiry Distribution',
+                        zone_defect_analysis_title: 'Zone-wise Defect Analysis',
+                        prediction_chart_title: 'Failure Prediction Model',
+                        inspection_trends_chart_title: 'Inspection Trends Over Time',
+                        chart_pass: 'Pass',
+                        chart_fail: 'Fail'
+                    },
+                    inventory: {
+                        title: 'Inventory Management',
+                        search_placeholder: 'Search by Item ID, Vendor, or Location',
+                        add_item_btn: 'Add New Item',
+                        table_id_header: 'Item ID',
+                        table_vendor_header: 'Vendor',
+                        table_location_header: 'Location',
+                        table_status_header: 'Status',
+                        table_warranty_header: 'Warranty Expiry',
+                        table_actions_header: 'Actions',
+                        view_btn: 'View',
+                        delete_btn: 'Delete'
+                    },
+                    language: {
+                        label: 'Language:'
+                    }
+                },
+                hi: {
+                    sidebar: {
+                        login: 'लॉगिन',
+                        inspector_dashboard: 'निरीक्षक डैशबोर्ड',
+                        manufacturer_dashboard: 'विनिर्माण डैशबोर्ड',
+                        manufactured_items: 'विनिर्मित वस्तुएं',
+                        analytics: 'विश्लेषण',
+                        inventory: 'इन्वेंट्री'
+                    },
+                    header: {
+                        subtitle: 'रेलवे फिटिंग्स प्रबंधक'
+                    },
+                    login: {
+                        title: 'लॉगिन',
+                        username_label: 'उपयोगकर्ता नाम',
+                        password_label: 'पासवर्ड',
+                        login_btn: 'साइन इन करें',
+                        login_error: 'अमान्य उपयोगकर्ता नाम या पासवर्ड। कृपया पुनः प्रयास करें।'
+                    },
+                    inspector_dashboard: {
+                        title: 'निरीक्षक डैशबोर्ड',
+                        description: 'आइटम विवरण देखने और निरीक्षण रिकॉर्ड करने के लिए क्यूआर कोड स्कैन करें।',
+                        start_scan_btn: 'क्यूआर स्कैनर शुरू करें',
+                        stop_scan_btn: 'क्यूआर स्कैनर बंद करें',
+                        scan_status: 'क्यूआर कोड स्कैन हो रहा है...',
+                        scan_success: 'क्यूआर कोड सफलतापूर्वक स्कैन हो गया!',
+                        item_details_title: 'आइटम विवरण',
+                        item_details_placeholder: 'विवरण देखने के लिए एक आइटम स्कैन करें।',
+                        record_inspection_title: 'नया निरीक्षण रिकॉर्ड करें',
+                        inspection_date_label: 'निरीक्षण की तारीख',
+                        capture_photo_btn: 'टाइमस्टैम्प के साथ फोटो लें',
+                        download_pdf_btn: 'निरीक्षण रिपोर्ट (पीडीएफ) डाउनलोड करें',
+                        photo_captured: 'फोटो सफलतापूर्वक खींची गई!',
+                        pdf_generated: 'पीडीएफ सफलतापूर्वक बन गया!'
+                    },
+                    manufacturer_dashboard: {
+                        title: 'विनिर्माण डैशबोर्ड',
+                        item_id_label: 'आइटम आईडी',
+                        manufacturing_name_label: 'विनिर्माण का नाम',
+                        vendor_lot_number_label: 'विक्रेता लॉट संख्या',
+                        date_of_supply_label: 'आपूर्ति की तारीख',
+                        warranty_period_label: 'वारंटी अवधि',
+                        location_label: 'स्थान',
+                        timestamp_label: 'समय',
+                        generate_btn: 'क्यूआर कोड बनाएं',
+                        download_btn: 'क्यूआर कोड डाउनलोड करें',
+                        reset_btn: 'फॉर्म रीसेट करें'
+                    },
+                    manufactured_items: {
+                        title: 'विनिर्मित वस्तुएं',
+                        description: 'विनिर्मित वस्तुओं को प्रबंधित और ट्रैक करें।',
+                        table_id_header: 'आइटम आईडी',
+                        table_manuf_header: 'विनिर्माण का नाम',
+                        table_date_manuf_header: 'निर्माण की तारीख',
+                        table_date_supply_header: 'आपूर्ति की तारीख',
+                        table_warranty_header: 'वारंटी अवधि',
+                    },
+                    analytics: {
+                        title: 'विश्लेषण डैशबोर्ड',
+                        quality_score: 'कुल गुणवत्ता स्कोर',
+                        defect_rate: 'औसत दोष दर',
+                        warranty_items: 'वारंटी के तहत आइटम',
+                        inspection_pass_rate: 'निरीक्षण पास दर',
+                        vendor_defect_chart_title: 'विक्रेता-वार दोष दर',
+                        warranty_chart_title: 'वारंटी समाप्ति वितरण',
+                        zone_defect_analysis_title: 'ज़ोन-वार दोष विश्लेषण',
+                        prediction_chart_title: 'विफलता भविष्यवाणी मॉडल',
+                        inspection_trends_chart_title: 'समय के साथ निरीक्षण रुझान',
+                        chart_pass: 'पास',
+                        chart_fail: 'फेल'
+                    },
+                    inventory: {
+                        title: 'इन्वेंट्री प्रबंधन',
+                        search_placeholder: 'आइटम आईडी, विक्रेता, या स्थान से खोजें',
+                        add_item_btn: 'नया आइटम जोड़ें',
+                        table_id_header: 'आइटम आईडी',
+                        table_vendor_header: 'विक्रेता',
+                        table_location_header: 'स्थान',
+                        table_status_header: 'स्थिति',
+                        table_warranty_header: 'वारंटी समाप्ति',
+                        table_actions_header: 'कार्य',
+                        view_btn: 'देखें',
+                        delete_btn: 'हटाएं'
+                    },
+                    language: {
+                        label: 'भाषा:'
+                    }
+                }
+            };
+
+            let currentLang = localStorage.getItem('lang') || 'en';
+            languageSelect.value = currentLang;
+
+            const updateUI = (lang) => {
+                const elements = document.querySelectorAll('[data-lang-key]');
+                elements.forEach(el => {
+                    const key = el.getAttribute('data-lang-key');
+                    const keys = key.split('.');
+                    let text = translations[lang];
+                    keys.forEach(k => text = text[k]);
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = text;
+                    } else {
+                        el.textContent = text;
+                    }
+                });
+                const activePageElement = document.querySelector('.sidebar a.active');
+                if (activePageElement) {
+                    const pageName = activePageElement.id.replace('Link', '');
+                    pageTitle.textContent = translations[lang][translatePageTitle(pageName)];
+                } else {
+                     pageTitle.textContent = translations[lang]['login']['title'];
+                }
+                pageSubtitle.textContent = translations[lang].header.subtitle;
+            };
+
+            const analyticsData = {
+                vendorDefect: {
+                    labels: ['Vendor A', 'Vendor B', 'Vendor C', 'Vendor D'],
+                    data: [15, 25, 10, 50],
+                },
+                warranty: {
+                    labels: ['Under Warranty', 'Expired', 'N/A'],
+                    data: [84, 16, 0],
+                },
+                prediction: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    data: [5, 6, 8, 12, 10, 15],
+                },
+                inspectionTrends: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    pass: [80, 85, 90, 92],
+                    fail: [20, 15, 10, 8],
+                }
+            };
+
+            const manufacturedItemsData = [
+                { id: 'FIT-001', manufacturingName: 'RailCo Inc.', dateManufactured: '2024-04-10', dateSupplied: '2024-05-10', warrantyPeriod: '24 months' },
+                { id: 'FIT-002', manufacturingName: 'TrackTech Solutions', dateManufactured: '2023-10-22', dateSupplied: '2023-11-22', warrantyPeriod: '36 months' },
+                { id: 'FIT-003', manufacturingName: 'Forge Rail', dateManufactured: '2024-01-15', dateSupplied: '2024-03-15', warrantyPeriod: '12 months' },
+                { id: 'FIT-004', manufacturingName: 'RailCo Inc.', dateManufactured: '2027-01-30', dateSupplied: '2027-01-30', warrantyPeriod: '36 months' },
+                { id: 'FIT-005', manufacturingName: 'TrackTech Solutions', dateManufactured: '2024-08-01', dateSupplied: '2024-09-01', warrantyPeriod: '24 months' }
+            ];
+
+            const inventoryItems = [
+                { id: 'FIT-001', vendor: 'Vendor A', location: 'North Zone', status: 'In Service', warrantyExpiry: '2026-05-10' },
+                { id: 'FIT-002', vendor: 'Vendor B', location: 'South Zone', status: 'Under Inspection', warrantyExpiry: '2025-11-22' },
+                { id: 'FIT-003', vendor: 'Vendor C', location: 'West Zone', status: 'Defective', warrantyExpiry: '2024-03-15' },
+                { id: 'FIT-004', vendor: 'Vendor A', location: 'East Zone', status: 'In Service', warrantyExpiry: '2027-01-30' },
+                { id: 'FIT-005', vendor: 'Vendor B', location: 'Central Zone', status: 'In Service', warrantyExpiry: '2026-09-01' }
+            ];
+
+            /* -------------------------
+               Templates (full original UI)
+               ------------------------- */
+            const loginPageHTML = `
+                <div class="flex justify-center items-center min-h-[calc(100vh-10rem)]">
+                    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+                        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6" data-lang-key="login.title">Login</h2>
+                        <form id="loginForm" class="space-y-4">
+                            <div>
+                                <label for="username" class="block text-gray-700 font-medium" data-lang-key="login.username_label">Username</label>
+                                <input type="text" id="username" name="username" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="password" class="block text-gray-700 font-medium" data-lang-key="login.password_label">Password</label>
+                                <input type="password" id="password" name="password" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300 ease-in-out" data-lang-key="login.login_btn">Sign In</button>
+                        </form>
+                        <p id="loginMessage" class="text-center mt-4 text-sm text-red-500"></p>
+                    </div>
+                </div>
+            `;
+
+            const inspectorDashboardHTML = `
+                <div class="p-6 bg-white rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Inspector Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left side: Scanner -->
+                        <div>
+                            <video id="qr-scanner" class="w-full h-80 bg-gray-100 rounded-lg" autoplay playsinline></video>
+                            <canvas id="qr-canvas" style="display:none;"></canvas>
+                            <button id="startScanBtn" class="mt-4 w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-md" data-lang-key="inspector_dashboard.start_scan_btn">Start QR Scanner</button>
+                            <input type="file" id="qrImageUpload" accept="image/*" class="mt-4 w-full border p-2 rounded-md" />
+                            <p id="scanStatus" class="text-center text-sm font-medium text-red-500 mt-2" data-lang-key="inspector_dashboard.scan_status">Scanning for QR Code...</p>
+                        </div>
+
+                        <!-- Right side: Details & inspection -->
+                        <div id="inspectionDetails" class="space-y-4">
+                            <h3 class="text-xl font-bold text-gray-800" data-lang-key="inspector_dashboard.item_details_title">Item Details</h3>
+                            <div id="itemDetailsOutput" class="p-4 bg-gray-100 rounded-md">
+                                <p class="text-gray-600" data-lang-key="inspector_dashboard.item_details_placeholder">Scan or upload a QR to see details here.</p>
+                            </div>
+
+                            <div class="p-4 bg-white border rounded-md">
+                                <h4 class="font-semibold mb-2" data-lang-key="inspector_dashboard.record_inspection_title">Record New Inspection</h4>
+                                <label class="block mb-2 text-sm font-medium" data-lang-key="inspector_dashboard.inspection_date_label">Inspection Date</label>
+                                <input id="inspectionDate" type="date" class="w-full px-3 py-2 border rounded-md mb-3" />
+
+                                <button id="capturePhotoBtn" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md mb-3" data-lang-key="inspector_dashboard.capture_photo_btn">Capture Photo with Timestamp</button>
+                                <canvas id="photo-canvas" style="display:none;"></canvas>
+                                <img id="inspection-photo" src="" alt="Inspection Photo" class="hidden rounded-md mt-2" />
+
+                                <button id="downloadPdfBtn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md mt-3" data-lang-key="inspector_dashboard.download_pdf_btn">Download Inspection Report (PDF)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const manufacturerDashboardHTML = `
+                <div class="container">
+                    <div class="card">
+                        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6" data-lang-key="manufacturer_dashboard.title">Manufacturer Dashboard</h1>
+                        <form id="qrForm" class="space-y-4">
+                            <div>
+                                <label for="itemId" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.item_id_label">Item ID</label>
+                                <input type="text" id="itemId" name="itemId" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="manufacturingName" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.manufacturing_name_label">Manufacturing Name</label>
+                                <input type="text" id="manufacturingName" name="manufacturingName" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="vendorLotNumber" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.vendor_lot_number_label">Vendor Lot Number</label>
+                                <input type="text" id="vendorLotNumber" name="vendorLotNumber" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="dateOfSupply" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.date_of_supply_label">Date of Supply</label>
+                                <input type="date" id="dateOfSupply" name="dateOfSupply" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="warrantyPeriod" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.warranty_period_label">Warranty Period</label>
+                                <input type="text" id="warrantyPeriod" name="warrantyPeriod" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="location" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.location_label">Location</label>
+                                <input type="text" id="location" name="location" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label for="timestamp" class="block text-gray-700 font-medium" data-lang-key="manufacturer_dashboard.timestamp_label">Timestamp</label>
+                                <input type="datetime-local" id="timestamp" name="timestamp" required class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div class="flex justify-center">
+                                <button type="submit" id="generateButton" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" data-lang-key="manufacturer_dashboard.generate_btn">Generate QR Code</button>
+                            </div>
+                        </form>
+                        <div id="qrCodeContainer" class="qr-code-container mt-4"></div>
+                        <div id="qrButtons" class="flex justify-center mt-4 space-x-4 hidden">
+                            <button id="downloadButton" class="px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition duration-300 ease-in-out" data-lang-key="manufacturer_dashboard.download_btn">Download QR Code</button>
+                            <button id="resetButton" class="px-4 py-2 bg-gray-400 text-gray-800 font-semibold rounded-md hover:bg-gray-500 transition duration-300 ease-in-out" data-lang-key="manufacturer_dashboard.reset_btn">Reset Form</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const manufacturedItemsHTML = `
+                <div class="p-6 bg-white rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6" data-lang-key="manufactured_items.title">Manufactured Items</h2>
+                    <p class="text-sm font-medium text-gray-600 mb-6" data-lang-key="manufactured_items.description">Manage and track manufactured items.</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="manufactured_items.table_id_header">Item ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="manufactured_items.table_manuf_header">Manufacturing Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="manufactured_items.table_date_manuf_header">Date of Manufacture</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="manufactured_items.table_date_supply_header">Date of Supply</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="manufactured_items.table_warranty_header">Warranty Period</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manufacturedItemsTableBody" class="bg-white divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            const analyticsDashboardHTML = `
+                <div class="p-6 bg-white rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6" data-lang-key="analytics.title">Analytics Dashboard</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-blue-100 p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-4xl font-bold text-blue-800">96.2%</span>
+                            <span class="text-lg text-blue-600" data-lang-key="analytics.quality_score">Overall Quality Score</span>
+                            <span class="text-sm text-blue-500" data-lang-key="analytics.quality_score_status">Good</span>
+                        </div>
+                        <div class="bg-red-100 p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-4xl font-bold text-red-800">3.8%</span>
+                            <span class="text-lg text-red-600" data-lang-key="analytics.defect_rate">Average Defect Rate</span>
+                            <span class="text-sm text-red-500" data-lang-key="analytics.defect_rate_status">Monitor</span>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-4xl font-bold text-green-800">84%</span>
+                            <span class="text-lg text-green-600" data-lang-key="analytics.warranty_items">Items Under Warranty</span>
+                            <span class="text-sm text-green-500" data-lang-key="analytics.warranty_items_status">Excellent</span>
+                        </div>
+                        <div class="bg-yellow-100 p-4 rounded-lg flex flex-col items-center">
+                            <span class="text-4xl font-bold text-yellow-800">92.1%</span>
+                            <span class="text-lg text-yellow-600" data-lang-key="analytics.inspection_pass_rate">Inspection Pass Rate</span>
+                            <span class="text-sm text-yellow-500" data-lang-key="analytics.inspection_pass_rate_status">High</span>
+                        </div>
+                    </div>
+                    <hr class="my-6 border-gray-300">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4" data-lang-key="analytics.vendor_defect_chart_title">Vendor-wise Defect Rate</h3>
+                            <div>
+                                <canvas id="vendorDefectChart" width="300" height="300"></canvas>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4" data-lang-key="analytics.warranty_chart_title">Warranty Expiry Distribution</h3>
+                            <canvas id="warrantyChart" width="300" height="300"></canvas>
+                        </div>
+                    </div>
+                    <hr class="my-6 border-gray-300">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4" data-lang-key="analytics.zone_defect_analysis_title">Zone-wise Defect Analysis</h3>
+                        <div id="zoneDefectAnalysis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-semibold">North Zone</h4>
+                                <p class="text-sm text-gray-600">Defects: 12%</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-semibold">South Zone</h4>
+                                <p class="text-sm text-gray-600">Defects: 5%</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-semibold">East Zone</h4>
+                                <p class="text-sm text-gray-600">Defects: 8%</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-semibold">West Zone</h4>
+                                <p class="text-sm text-gray-600">Defects: 15%</p>
+                            </div>
+                            <div class="bg-gray-100 p-4 rounded-lg">
+                                <h4 class="font-semibold">Central Zone</h4>
+                                <p class="text-sm text-gray-600">Defects: 9%</p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-6 border-gray-300">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4" data-lang-key="analytics.prediction_chart_title">Failure Prediction Model</h3>
+                            <canvas id="predictionChart" width="300" height="300"></canvas>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800 mb-4" data-lang-key="analytics.inspection_trends_chart_title">Inspection Trends Over Time</h3>
+                            <div>
+                                <canvas id="inspectionTrendsChart" width="300" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const inventoryHTML = `
+                <div class="p-6 bg-white rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6" data-lang-key="inventory.title">Inventory Management</h2>
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+                        <input type="text" id="inventorySearch" placeholder="Search by Item ID, Vendor, or Location..." class="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" data-lang-key="inventory.search_placeholder">
+                        <button id="addInventoryItemBtn" class="w-full md:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-300 ease-in-out" data-lang-key="inventory.add_item_btn">Add New Item</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_id_header">Item ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_vendor_header">Vendor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_location_header">Location</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_status_header">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_warranty_header">Warranty Expiry</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-lang-key="inventory.table_actions_header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            /* -------------------------
+               Render helpers
+               ------------------------- */
+            const renderManufacturedItemsTable = (items) => {
+                const tbody = document.getElementById('manufacturedItemsTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.manufacturingName}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.dateManufactured}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.dateSupplied}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.warrantyPeriod}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            };
+
+            const renderInventoryTable = (items) => {
+                const tbody = document.getElementById('inventoryTableBody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    const statusColor = item.status === 'Defective' ? 'text-red-600' : (item.status === 'Under Inspection' ? 'text-yellow-600' : 'text-green-600');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.vendor}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.location}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold ${statusColor}">${item.status}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.warrantyExpiry}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-blue-600 hover:text-blue-900 mr-2" data-lang-key="inventory.view_btn">View</button>
+                            <button class="text-red-600 hover:text-red-900" data-lang-key="inventory.delete_btn">Delete</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            };
+
+            const stopQrScanner = () => {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+            };
+
+            const renderPage = (pageName) => {
+                let htmlContent = '';
+                stopQrScanner();
+
+                for (let chart in myCharts) {
+                    if (myCharts[chart]) {
+                        myCharts[chart].destroy();
+                    }
+                }
+                myCharts = {};
+
+                switch (pageName) {
+                    case 'login':
+                        htmlContent = loginPageHTML;
+                        showNavLinks(null);
+                        break;
+                    case 'inspectorDashboard':
+                        htmlContent = inspectorDashboardHTML;
+                        break;
+                    case 'manufacturerDashboard':
+                        htmlContent = manufacturerDashboardHTML;
+                        break;
+                    case 'manufacturedItems':
+                        htmlContent = manufacturedItemsHTML;
+                        break;
+                    case 'analytics':
+                        htmlContent = analyticsDashboardHTML;
+                        break;
+                    case 'inventory':
+                        htmlContent = inventoryHTML;
+                        break;
+                    default:
+                        htmlContent = loginPageHTML;
+                        showNavLinks(null);
+                        break;
+                }
+
+                contentPlaceholder.innerHTML = htmlContent;
+                updateUI(currentLang);
+                navLinks.forEach(link => link.classList.remove('active'));
+                const activeLink = document.getElementById(pageName + 'Link');
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+
+                if (pageName === 'login') {
+                    setupLogin();
+                } else if (pageName === 'inspectorDashboard') {
+                    setupQrScanner();
+                    setupQrUpload();
+                    setupInspectorDashboard();
+                } else if (pageName === 'manufacturerDashboard') {
+                    setupQrGenerator();
+                } else if (pageName === 'manufacturedItems') {
+                    renderManufacturedItemsTable(manufacturedItemsData);
+                } else if (pageName === 'analytics') {
+                    setupAnalyticsDashboard();
+                } else if (pageName === 'inventory') {
+                    renderInventoryTable(inventoryItems);
+                }
+            };
+
+            /* -------------------------
+               Login
+               ------------------------- */
+            const setupLogin = () => {
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const username = e.target.username.value;
+                    const password = e.target.password.value;
+                    const loginMessage = document.getElementById('loginMessage');
+                    loginMessage.textContent = '';
+
+                    let userRole = null;
+                    for (const role in userRoles) {
+                        if (userRoles[role].username === username && userRoles[role].password === password) {
+                            userRole = role;
+                            break;
+                        }
+                    }
+
+                    if (userRole) {
+                        alert('Login successful!');
+                        showNavLinks(userRole);
+                        renderPage(userRoles[userRole].dashboard);
+                    } else {
+                        loginMessage.textContent = translations[currentLang].login.login_error;
+                    }
+                });
+            };
+
+            /* -------------------------
+               QR Scanner (camera)
+               ------------------------- */
+            const setupQrScanner = () => {
+                const video = document.getElementById('qr-scanner');
+                const startScanBtn = document.getElementById('startScanBtn');
+                const scanStatus = document.getElementById('scanStatus');
+                const inspectionDetails = document.getElementById('inspectionDetails');
+                const itemDetailsOutput = document.getElementById('itemDetailsOutput');
+
+                let scanInterval;
+
+                const startScanning = () => {
+                    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                        .then(function(stream) {
+                            currentStream = stream;
+                            video.srcObject = stream;
+                            video.setAttribute("playsinline", true);
+                            video.play();
+                            scanStatus.textContent = translations[currentLang]['inspector_dashboard']['scan_status'];
+                            scanStatus.classList.add('text-red-500');
+                            scanStatus.classList.remove('text-green-500');
+                            startScanBtn.textContent = translations[currentLang]['inspector_dashboard']['stop_scan_btn'];
+                            startScanBtn.classList.remove('bg-blue-600');
+                            startScanBtn.classList.add('bg-red-600');
+
+                            scanInterval = setInterval(tick, 100);
+                        })
+                        .catch(function(err) {
+                            console.error("Error accessing camera: ", err);
+                            scanStatus.textContent = "Error: Camera access denied or not available.";
+                            scanStatus.classList.remove('text-red-500');
+                        });
+                };
+
+                const stopScanning = () => {
+                    if (currentStream) {
+                        currentStream.getTracks().forEach(track => track.stop());
+                        currentStream = null;
+                    }
+                    if (scanInterval) {
+                        clearInterval(scanInterval);
+                        scanInterval = null;
+                    }
+                    startScanBtn.textContent = translations[currentLang]['inspector_dashboard']['start_scan_btn'];
+                    startScanBtn.classList.remove('bg-red-600');
+                    startScanBtn.classList.add('bg-blue-600');
+                };
+
+                startScanBtn.addEventListener('click', () => {
+                    if (currentStream) {
+                        stopScanning();
+                        scanStatus.textContent = translations[currentLang]['inspector_dashboard']['scan_status'];
+                        scanStatus.classList.add('text-red-500');
+                        scanStatus.classList.remove('text-green-500');
+                        inspectionDetails.classList.add('hidden');
+                        itemDetailsOutput.innerHTML = `<p class="text-gray-600" data-lang-key="inspector_dashboard.item_details_placeholder">Scan an item to see its details here.</p>`;
+                        updateUI(currentLang);
+                    } else {
+                        startScanning();
+                    }
+                });
+
+                function tick() {
+                    const canvasElement = document.getElementById("qr-canvas");
+                    const canvas = canvasElement.getContext("2d");
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        canvasElement.hidden = false;
+                        canvasElement.height = video.videoHeight;
+                        canvasElement.width = video.videoWidth;
+                        canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+                        const imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "dontInvert",
+                        });
+                        if (code) {
+                            stopScanning();
+                            scanStatus.textContent = translations[currentLang]['inspector_dashboard']['scan_success'];
+                            scanStatus.classList.remove('text-red-500');
+                            scanStatus.classList.add('text-green-500');
+
+                            try {
+                                const qrData = JSON.parse(code.data);
+                                displayItemDetails(qrData);
+                                if (document.getElementById("inspectionDate")) {
+                                    document.getElementById("inspectionDate").value = new Date().toISOString().slice(0, 10);
+                                }
+                                if (inspectionDetails) inspectionDetails.classList.remove("hidden");
+                                scanStatus.textContent = "QR Code successfully scanned!";
+                                } catch (e) {
+                                displayItemDetails(code.data); // fallback plain text
+                                if (inspectionDetails) inspectionDetails.classList.remove("hidden");
+                                scanStatus.textContent = "Scanned plain text QR: " + code.data;
+                            }
+
+                        }
+                    }
+                }
+            };
+
+            /* -------------------------
+               QR Image Upload (fixed)
+               ------------------------- */
+            const setupQrUpload = () => {
+                const uploadInput = document.getElementById('qrImageUpload');
+                if (!uploadInput) return;
+                uploadInput.addEventListener('change', (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0, img.width, img.height);
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height);
+                            if (code) {
+                                try {
+                                    const qrData = JSON.parse(code.data);   // parse JSON QR
+                                    displayItemDetails(qrData);
+                                    document.getElementById('scanStatus').textContent = 'QR Code successfully decoded from image!';
+                                } catch (err) {
+                                    // fallback: plain text
+                                    displayItemDetails(code.data);
+                                    document.getElementById('scanStatus').textContent = 'Decoded plain text QR: ' + code.data;
+                                }
+                            } else {
+                                document.getElementById('scanStatus').textContent = 'No QR code found in image.';
+                            }
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            /* -------------------------
+               Display Item Details (fixed)
+               Handles JSON objects and plain text
+               ------------------------- */
+            const displayItemDetails = (data) => {
+                const outputDiv = document.getElementById("itemDetailsOutput");
+                if (!outputDiv) return; // prevent crash if element not ready
+
+                if (typeof data === "string") {
+                    outputDiv.innerHTML = `<p><strong>QR Data:</strong> ${data}</p>`;
+                    return;
+                }
+
+                // JSON object QR
+                outputDiv.innerHTML = `
+                    <p><strong>Item ID:</strong> ${data.itemId || ''}</p>
+                    <p><strong>Manufacturing Name:</strong> ${data.manufacturingName || ''}</p>
+                    <p><strong>Vendor Lot Number:</strong> ${data.vendorLotNumber || ''}</p>
+                    <p><strong>Date of Supply:</strong> ${data.dateOfSupply || ''}</p>
+                    <p><strong>Warranty Period:</strong> ${data.warrantyPeriod || ''}</p>
+                    <p><strong>Location:</strong> ${data.location || ''}</p>
+                    <p><strong>Timestamp:</strong> ${data.timestamp || ''}</p>
+                `;
+            };
+
+
+            /* small helper to avoid injecting HTML if QR contains markup */
+            function escapeHtml(unsafe) {
+                return String(unsafe)
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+            }
+
+            /* -------------------------
+               Inspector: capture photo & generate PDF
+               ------------------------- */
+            const setupInspectorDashboard = () => {
+                const capturePhotoBtn = document.getElementById('capturePhotoBtn');
+                const photoCanvas = document.getElementById('photo-canvas');
+                const inspectionPhoto = document.getElementById('inspection-photo');
+                const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+                let photoDataUrl = null;
+
+                if (capturePhotoBtn) {
+                    capturePhotoBtn.addEventListener('click', async () => {
+                        const video = document.getElementById('qr-scanner');
+                        if (!video || !video.srcObject) {
+                            alert("Please start the QR scanner first to capture a photo.");
+                            return;
+                        }
+                        const canvasContext = photoCanvas.getContext('2d');
+                        photoCanvas.width = video.videoWidth;
+                        photoCanvas.height = video.videoHeight;
+                        canvasContext.drawImage(video, 0, 0, photoCanvas.width, photoCanvas.height);
+
+                        const now = new Date();
+                        const timestampText = now.toLocaleString();
+                        canvasContext.font = '24px Arial';
+                        canvasContext.fillStyle = 'red';
+                        canvasContext.fillText(timestampText, 10, 30);
+
+                        photoDataUrl = photoCanvas.toDataURL('image/png');
+                        inspectionPhoto.src = photoDataUrl;
+                        inspectionPhoto.classList.remove('hidden');
+                        inspectionPhoto.style.display = 'block';
+                        alert(translations[currentLang]['inspector_dashboard']['photo_captured']);
+                    });
+                }
+
+                if (downloadPdfBtn) {
+                    downloadPdfBtn.addEventListener('click', () => {
+                        if (!photoDataUrl) {
+                            alert("Please capture a photo first.");
+                            return;
+                        }
+
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+                        const itemDetailsOutput = document.getElementById('itemDetailsOutput').innerText;
+                        const inspectionDate = document.getElementById('inspectionDate').value || new Date().toISOString().slice(0,10);
+                        const inspectorName = 'Inspector J. Doe';
+
+                        doc.setFontSize(22);
+                        doc.text(translations[currentLang]['inspector_dashboard']['title'], 105, 20, null, null, "center");
+                        doc.setFontSize(16);
+                        doc.text('Inspection Report', 105, 30, null, null, "center");
+
+                        doc.setFontSize(12);
+                        doc.text(`Report Date: ${new Date().toISOString().slice(0, 10)}`, 15, 40);
+                        doc.text(`Inspector: ${inspectorName}`, 15, 47);
+
+                        doc.setFontSize(14);
+                        doc.text('Item Details:', 15, 60);
+                        doc.setFontSize(12);
+                        const itemDetailsLines = itemDetailsOutput.split('\n').filter(line => line.trim() !== '');
+                        let yPos = 65;
+                        itemDetailsLines.forEach(line => {
+                            doc.text(line, 15, yPos);
+                            yPos += 7;
+                        });
+
+                        doc.setFontSize(14);
+                        doc.text('Inspection Details:', 15, yPos + 10);
+                        doc.setFontSize(12);
+                        doc.text(`Inspection Date: ${inspectionDate}`, 15, yPos + 17);
+
+                        if (photoDataUrl) {
+                            const img = new Image();
+                            img.onload = () => {
+                                const imgWidth = 100;
+                                const imgHeight = (img.height * imgWidth) / img.width;
+                                doc.addImage(photoDataUrl, 'PNG', 15, yPos + 25, imgWidth, imgHeight);
+                                doc.save('Inspection_Report.pdf');
+                                alert(translations[currentLang]['inspector_dashboard']['pdf_generated']);
+                            };
+                            img.src = photoDataUrl;
+                        } else {
+                            doc.save('Inspection_Report.pdf');
+                            alert(translations[currentLang]['inspector_dashboard']['pdf_generated']);
+                        }
+                    });
+                }
+            };
+
+            /* -------------------------
+               QR Generator (manufacturer)
+               ------------------------- */
+            const setupQrGenerator = () => {
+                const qrForm = document.getElementById('qrForm');
+                const qrCodeContainer = document.getElementById('qrCodeContainer');
+                const qrButtons = document.getElementById('qrButtons');
+
+                const generateQRCode = (data) => {
+                    qrCodeContainer.innerHTML = '';
+                    new QRCode(qrCodeContainer, {
+                        text: data,
+                        width: 256,
+                        height: 256,
+                    });
+                    qrButtons.classList.remove('hidden');
+                };
+
+                if (qrForm) {
+                    qrForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(qrForm);
+                        const data = Object.fromEntries(formData.entries());
+                        const qrData = JSON.stringify(data);
+                        generateQRCode(qrData);
+                    });
+                }
+
+                const downloadBtn = document.getElementById('downloadButton');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', () => {
+                        const qrCodeCanvas = qrCodeContainer.querySelector('canvas');
+                        if (!qrCodeCanvas) return;
+                        const link = document.createElement('a');
+                        link.href = qrCodeCanvas.toDataURL('image/png');
+                        link.download = 'qrcode.png';
+                        link.click();
+                    });
+                }
+
+                const resetBtn = document.getElementById('resetButton');
+                if (resetBtn) {
+                    resetBtn.addEventListener('click', () => {
+                        qrForm.reset();
+                        qrCodeContainer.innerHTML = '';
+                        qrButtons.classList.add('hidden');
+                    });
+                }
+            };
+
+            /* -------------------------
+               Analytics charts
+               ------------------------- */
+            const setupAnalyticsDashboard = () => {
+                const renderChart = (chartId, type, data, options) => {
+                    const ctx = document.getElementById(chartId).getContext('2d');
+                    if (myCharts[chartId]) {
+                        myCharts[chartId].destroy();
+                    }
+                    myCharts[chartId] = new Chart(ctx, { type, data, options });
+                };
+
+                renderChart('vendorDefectChart', 'bar', {
+                    labels: analyticsData.vendorDefect.labels,
+                    datasets: [{
+                        label: 'Defect Rate (%)',
+                        data: analyticsData.vendorDefect.data,
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }]
+                }, {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
+                });
+
+                renderChart('warrantyChart', 'doughnut', {
+                    labels: analyticsData.warranty.labels,
+                    datasets: [{
+                        label: 'Warranty Status',
+                        data: analyticsData.warranty.data,
+                        backgroundColor: ['rgb(75, 192, 192)', 'rgb(255, 99, 132)', 'rgb(201, 203, 207)'],
+                        hoverOffset: 4
+                    }]
+                }, { responsive: true });
+
+                renderChart('predictionChart', 'line', {
+                    labels: analyticsData.prediction.labels,
+                    datasets: [{
+                        label: 'Predicted Failures',
+                        data: analyticsData.prediction.data,
+                        borderColor: 'rgb(54, 162, 235)',
+                        tension: 0.1
+                    }]
+                }, { responsive: true, scales: { y: { beginAtZero: true } } });
+
+                renderChart('inspectionTrendsChart', 'line', {
+                    labels: analyticsData.inspectionTrends.labels,
+                    datasets: [
+                        {
+                            label: translations[currentLang]['analytics']['chart_pass'],
+                            data: analyticsData.inspectionTrends.pass,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        },
+                        {
+                            label: translations[currentLang]['analytics']['chart_fail'],
+                            data: analyticsData.inspectionTrends.fail,
+                            borderColor: 'rgb(255, 99, 132)',
+                            tension: 0.1
+                        }
+                    ]
+                }, { responsive: true, scales: { y: { beginAtZero: true } } });
+            };
+
+            /* -------------------------
+               Initial render + events
+               ------------------------- */
+            renderPage('login');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const pageName = e.currentTarget.id.replace('Link', '');
+                    renderPage(pageName);
+                });
+            });
+
+            languageSelect.addEventListener('change', (e) => {
+                currentLang = e.target.value;
+                localStorage.setItem('lang', currentLang);
+                updateUI(currentLang);
+                const currentPage = document.querySelector('.sidebar a.active').id.replace('Link', '');
+                renderPage(currentPage);
+            });
+        });
+    </script>
+</body>
+</html>
